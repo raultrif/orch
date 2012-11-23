@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:encryption="http://www.jasypt.org/schema/encryption"
+	xmlns:oxm="http://www.springframework.org/schema/oxm"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd         
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd         
+    http://www.jasypt.org/schema/encryption http://www.jasypt.org/schema/encryption/jasypt-spring3-encryption-1.xsd
+	http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-1.5.xsd
+    ">
+
+	<context:spring-configured />
+	<context:annotation-config />
+	<context:component-scan base-package="com.colt">
+		<context:exclude-filter expression=".*_Roo_.*" type="regex" />
+	</context:component-scan>
+
+	<encryption:encryptor-config id="eConf" password-sys-property-name="ORCH_PASSWORD"
+		algorithm="PBEWithMD5AndTripleDES" />
+
+	<encryption:string-encryptor id="stringEnc" config-bean="eConf" />
+
+	<encryption:encryptable-properties id="configProperties" encryptor="stringEnc"
+		location="classpath:config-${orchenv}.properties" />
+
+	<encryption:encryptable-property-placeholder encryptor="stringEnc"
+		location="classpath:config.properties,classpath:config-${orchenv}.properties" />
+
+	<bean id="userMessageService" class="com.colt.common.text.UserMessageService">
+		<constructor-arg value="text-messages" />
+	</bean>
+
+	<oxm:jaxb2-marshaller id="marshaller">
+        <oxm:class-to-be-bound name="com.colt.orchestrator.engine.TaskContext" />
+        <oxm:class-to-be-bound name="com.colt.cloudstack.message.snapshot.CloudstackCreateSnapshotRequest" />
+        <oxm:class-to-be-bound name="com.colt.cloudstack.message.domain.CloudstackListDomainsRequest" />
+        <oxm:class-to-be-bound name="com.colt.cloudstack.message.CloudstackStatusRequest" />
+	</oxm:jaxb2-marshaller>
+
+	<bean id="xmlMarshaller" class="com.colt.common.xml.XmlMarshaller" />
+
+</beans>

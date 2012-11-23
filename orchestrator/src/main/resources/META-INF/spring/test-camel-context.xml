@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <camelContext id="camelContext" xmlns="http://camel.apache.org/schema/spring">
+        <package>com.colt</package>
+
+        <endpoint id="uri.platform.request" uri="${uri.platform.request}" />
+        <endpoint id="uri.platform.response" uri="${uri.platform.response}" />
+
+        <dataFormats>
+            <jaxb id="jaxb" prettyPrint="true" contextPath="com.colt.orchestrator.message:com.colt.cloudstack.message" />
+            <json id="json" prettyPrint="true" />
+        </dataFormats>
+
+        <route id="route.orch-response-q">
+            <from uri="uri.platform.response" />
+            <log message="Despatching to Orchestrator response listener" />
+            <bean ref="responseListener" />
+        </route>
+
+    </camelContext>
+
+    <beans:bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+        <beans:property name="connectionFactory">
+            <beans:bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <beans:property name="brokerURL"
+                    value="vm://localhost?broker.persistent=false&amp;broker.useJmx=true&amp;broker.schedulerSupport=true" />
+            </beans:bean>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="responseListener" class="com.colt.orchestrator.engine.ResponseListener" />
+
+</beans:beans>

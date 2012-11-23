@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:drools="http://drools.org/schema/drools-spring" xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd         
+		http://drools.org/schema/drools-spring http://drools.org/schema/drools-spring.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+		">
+
+    <drools:resource id="createSnapshotProcess" type="BPMN2" source="classpath:processes/CreateSnapshot.bpmn" />
+    <drools:resource id="testbedProcess" type="BPMN2" source="classpath:processes/Testbed.bpmn" />
+
+	<drools:kbase id="kBase">
+		<drools:resources>
+            <drools:resource ref="createSnapshotProcess" />
+            <drools:resource ref="testbedProcess" />
+		</drools:resources>
+	</drools:kbase>
+
+    <bean id="createSnapshotHandler" class="com.colt.orchestrator.handlers.cloudstack.CreateSnapshotHandler" />
+    <bean id="ascertainDomainHandler" class="com.colt.orchestrator.handlers.cloudstack.AscertainDomainHandler" />
+
+	<drools:ksession id="kSession" type="stateful" kbase="kBase">
+		<drools:configuration>
+			<drools:work-item-handlers>
+                <drools:work-item-handler name="CreateSnapshot" ref="createSnapshotHandler" />
+                <drools:work-item-handler name="AscertainDomain" ref="ascertainDomainHandler" />
+          </drools:work-item-handlers>
+			<drools:jpa-persistence>
+				<drools:transaction-manager ref="transactionManager" />
+				<drools:entity-manager-factory ref="entityManagerFactory" />
+			</drools:jpa-persistence>
+		</drools:configuration>
+	</drools:ksession>
+
+	<!-- jBPM Audit Logger -->
+	<bean class="org.jbpm.process.audit.JPAWorkingMemoryDbLogger" id="jbpmDBLogger">
+		<constructor-arg ref="kSession" />
+	</bean>
+
+</beans>		
